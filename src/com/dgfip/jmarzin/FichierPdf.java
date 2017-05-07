@@ -12,16 +12,11 @@ class FichierPdf {
         return atdSie;
     }
 
-    private File fichier;
-    File getFichier() {
-        return fichier;
-    }
-
     private PdfReader lecteurPdf;
     PdfReader getLecteurPdf() { return lecteurPdf;}
 
-    private String typeFichier;
-    String getTypeFichier() { return typeFichier;}
+    private TypeCourrier typeFichier;
+    TypeCourrier getTypeFichier() { return typeFichier;}
 
     String getChaine(int page) {
         String chaine = "";
@@ -34,7 +29,6 @@ class FichierPdf {
     }
 
     FichierPdf(File fichier) {
-        this.fichier = fichier;
         try {
             this.lecteurPdf = new PdfReader(fichier.getAbsolutePath());
         } catch (IOException e) {
@@ -42,22 +36,22 @@ class FichierPdf {
         }
         String chaine = this.getChaine(1);
         if (chaine.contains("BULLETIN-REPONSE A L'AVIS A TIERS DETENTEUR")) {
-            this.typeFichier = "Bulletin_reponse_atd";
+            this.typeFichier = TypeCourrier.SIE_ATD_BULLETIN_REPONSE; //"Bulletin_reponse_atd";
             this.atdSie = true;
         }
         else if (chaine.contains("N° 3735 Original")) {
-            this.typeFichier = "Atd";
+            this.typeFichier = TypeCourrier.SIE_ATD;//"Atd";
             this.atdSie = true;
         }
         else if (chaine.contains("N° 3738 Original")){
-            this.typeFichier = "Notification_atd";
+            this.typeFichier = TypeCourrier.SIE_ATD_NOTIFICATION;//"Notification_atd";
             this.atdSie = true;
         }
         else if (chaine.contains("ATD-MIRIAM-SP")) {
-            this.typeFichier = "Verso";
+            this.typeFichier = TypeCourrier.SIE_ATD_VERSO;//"Verso";
             this.atdSie = true;
         } else {
-            this.typeFichier = "Inconnu";
+            this.typeFichier = null;
             this.atdSie = false;
         }
     }

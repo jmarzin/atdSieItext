@@ -13,11 +13,11 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AtdSieItext {
 
     //limite de pages
-    private static final int MAX_PAGES = 0;
-    public static JLabel jLabel = new JLabel("Demande du répertoire"); // champ d'affichage des étapes
-    public static JTextArea display = new JTextArea(16, 60);  // champ d'affichage de la log
+    private static final int MAX_PAGES = 1000;
+    static JLabel jLabel = new JLabel("Demande du répertoire"); // champ d'affichage des étapes
+    private static JTextArea display = new JTextArea(16, 60);  // champ d'affichage de la log
 
-    public static void log (String texte) {
+    static void log(String texte) {
         System.out.println(texte);
         display.setText(display.getText()+texte+"\n");
     }
@@ -29,7 +29,7 @@ public class AtdSieItext {
         fenetre.setTitle("Traitement des courriers d'ATD");
         fenetre.setSize(700, 350);
         fenetre.setLocationRelativeTo(null);
-        fenetre.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        fenetre.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         fenetre.setVisible(true);
         JPanel pan = new JPanel();
         pan.setLayout(new BoxLayout(pan,BoxLayout.PAGE_AXIS));
@@ -127,7 +127,7 @@ public class AtdSieItext {
             repTraites.set(new File(repATraiter.getRepertoire().getCanonicalPath() +
                     File.separatorChar + "dejaTraites"));
             if(!repTraites.get().exists() || repTraites.get().isFile()) {
-                repTraites.get().mkdir();
+                if(!repTraites.get().mkdir()) log("Création du répertoire dejaTraites impossible");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -137,7 +137,7 @@ public class AtdSieItext {
             String nomOr = repATraiter.getRepertoire().getAbsolutePath() + File.separator + fichier;
             String nomDest = repATraiter.getRepertoire().getAbsolutePath() + File.separator +
                     "dejaTraites" + File.separator + fichier;
-            new File(nomOr).renameTo(new File(nomDest));
+            if(!new File(nomOr).renameTo(new File(nomDest))) log(String.format("Rename de %s impossible", nomOr));
         }
 
         //Appel de clic'esi plus
