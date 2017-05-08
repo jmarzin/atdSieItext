@@ -2,7 +2,7 @@ package com.dgfip.jmarzin;
 
 import com.itextpdf.text.pdf.PdfReader;
 
-class Page {
+class PageLue {
 
     private PdfReader lecteurPdf;
     PdfReader getLecteurPdf() {
@@ -14,7 +14,7 @@ class Page {
         return ipage;
     }
 
-    Page(FichierPdf fichierPdf, int ipage) {
+    PageLue(FichierPdf fichierPdf, int ipage) {
         this.lecteurPdf = fichierPdf.getLecteurPdf();
         this.ipage = ipage;
     }

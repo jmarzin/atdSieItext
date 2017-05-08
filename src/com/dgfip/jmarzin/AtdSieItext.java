@@ -97,7 +97,7 @@ public class AtdSieItext {
         courriers.verif();
 
         //Ecriture du fichier des copies
-        List<String> listeFichiers = new ArrayList<String>();
+        Map<String,List<PageAModifier>> listeFichiers = new HashMap<String, List<PageAModifier>>();
         try {
             listeFichiers = courriers.ecritCopies(listeFichiers, MAX_PAGES,repATraiter.getRepertoire(),repATraiter.getVerso() ,dateHeure);
         } catch (IOException e) {
@@ -142,9 +142,9 @@ public class AtdSieItext {
 
         //Appel de clic'esi plus
         if(clicEsi){
-            for (String nomFichier: listeFichiers) {
+            for (String nomFichier: listeFichiers.keySet()) {
                 try {
-                    courriers.clicEsi(nomFichier, 2);
+                    courriers.clicEsi(nomFichier, 2,listeFichiers.get(nomFichier));
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (DocumentException e) {

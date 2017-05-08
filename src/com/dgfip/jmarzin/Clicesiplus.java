@@ -17,42 +17,58 @@ class Clicesiplus {
     private Font arial6;
     private Font arial8;
     private Font ocr10;
-    private Rectangle rectDest;
-    private RegionTextRenderFilter filterExp;
-    private RegionTextRenderFilter filterDest;
     private List<PdfCleanUpLocation> cleanUpLocations = new ArrayList<PdfCleanUpLocation>();
     private PdfStamper stamper;
+    private PdfReader lecteurPdf;
+
+    private int nbTotalPages;
+    int getNbTotalPages() {
+        return nbTotalPages;
+    }
+
     private static final char[][] accents = {{'à','a'},{'é','e'},{'è','e'},{'ê','e'},{'ë','e'},
             {'ï','i'},{'ô','o'},{'ù','u'},{'.',' '}};
 
-    Clicesiplus(Rectangle rectExp, Rectangle rectDest, String nomFichier, PdfReader lecteurPdf) throws IOException, DocumentException {
+    Clicesiplus(String nomFichier) throws IOException, DocumentException {
         BaseFont bf = BaseFont.createFont("C:\\Windows\\Fonts\\arial.ttf", BaseFont.WINANSI, BaseFont.EMBEDDED);
         this.arial6 = new Font(bf, 6);
         this.arial8 = new Font(bf,8);
         bf = BaseFont.createFont("C:\\Windows\\Fonts\\OCR-B10BT.TTF", BaseFont.WINANSI, BaseFont.EMBEDDED);
         this.ocr10 = new Font(bf, 10);
-        this.rectDest = rectDest;
-        this.filterExp = new RegionTextRenderFilter(rectExp);
-        this.filterDest = new RegionTextRenderFilter(rectDest);
+        this.lecteurPdf = new PdfReader(nomFichier);
+        this.nbTotalPages = lecteurPdf.getNumberOfPages();
         this.stamper = new PdfStamper(lecteurPdf, new FileOutputStream(nomFichier.replaceAll(".pdf$", "_ClicEsi.pdf")));
     }
 
-    String[] getAdresseExp(PdfReader lecteurPdf, int ipage) throws IOException {
-        FilteredTextRenderListener strategy = new FilteredTextRenderListener(new LocationTextExtractionStrategy(), filterExp);
-        return PdfTextExtractor.getTextFromPage(lecteurPdf, ipage, strategy).split("\n");
+    String[] getAdresse(String adresse, PageAModifier page) throws IOException {
+        Rectangle rect = (adresse == "Exp") ? page.getTypeCourrier().rectExp() : page.getTypeCourrier().rectDest();
+        RegionTextRenderFilter filter = new RegionTextRenderFilter(rect);
+        FilteredTextRenderListener strategy = new FilteredTextRenderListener(new LocationTextExtractionStrategy(), filter);
+        return PdfTextExtractor.getTextFromPage(lecteurPdf, page.getIpage(), strategy).split("\n");
     }
-    String[] getAdresseDest(PdfReader lecteurPdf, int ipage) throws IOException {
-        FilteredTextRenderListener strategy = new FilteredTextRenderListener(new LocationTextExtractionStrategy(), filterDest);
-        return PdfTextExtractor.getTextFromPage(lecteurPdf, ipage, strategy).split("\n");
-    }
-    void deleteAdresseDest(int ipage) throws IOException, DocumentException {
-        cleanUpLocations.add(new PdfCleanUpLocation(ipage,rectDest));
+
+    void deleteAdresse(String adresse, PageAModifier page) throws IOException, DocumentException {
+        Rectangle rect = (adresse.equals("Exp")) ? page.getTypeCourrier().rectExp() : page.getTypeCourrier().rectDest();
+        cleanUpLocations.add(new PdfCleanUpLocation(page.getIpage(),rect));
         PdfCleanUpProcessor cleaner = new PdfCleanUpProcessor(cleanUpLocations,stamper);
         cleaner.cleanUp();
         cleanUpLocations.clear();
     }
 
-    private void replaceAdresse(String[] texte, int ipage, Float y, Font fonte, Float espace) {
+    void replaceAdresse(String adresse, String[] texte, int ipage) {
+        Float y;
+        Float espace;
+        Font fonte;
+
+        if(adresse.equals("Exp")) {
+            fonte = arial8;
+            y = 730f;
+            espace = 10f;
+        } else {
+            fonte = ocr10;
+            y = 650f;
+            espace = 12f;
+        }
         PdfContentByte canvas = stamper.getOverContent(ipage);
         for (String ligne: texte) {
             if(!ligne.startsWith("CS ")) {
@@ -62,13 +78,7 @@ class Clicesiplus {
             }
         }
     }
-    void replaceAdresseExp(String[] texteExp, int ipage) {
-        replaceAdresse(texteExp, ipage, 730f, arial8, 10f);
 
-    }
-    void replaceAdresseDest(String[] texteDest, int ipage) {
-        replaceAdresse(enleveAccent(texteDest), ipage, 650f, ocr10, 12f);
-    }
     void diese(int ipage) {
         PdfContentByte canvas = stamper.getOverContent(ipage);
         ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT,
@@ -76,6 +86,7 @@ class Clicesiplus {
     }
     void close() throws IOException, DocumentException {
         stamper.close();
+        lecteurPdf.close();
     }
     private String[] enleveAccent(String[] texte) {
         for(int i = 0; i< texte.length; i++) {
