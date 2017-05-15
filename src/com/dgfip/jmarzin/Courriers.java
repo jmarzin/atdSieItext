@@ -20,25 +20,25 @@ class Courriers {
 
     private Map<String, Map<TypeCourrier, List<PageLue>>> originaux = new HashMap<String, Map<TypeCourrier, List<PageLue>>>();    // String : n° atd
 
-    private String getNumero(String chaine) {
-        String numeroAtd = "";
-        Pattern pattern = Pattern.compile(".*\\nN° (?:ATD|de la notification) : (\\d+)\\n.*", Pattern.MULTILINE | Pattern.DOTALL);
+    private String getCle(String chaine, TypeCourrier typeCourrier) {
+        String cle = "";
+        Pattern pattern = Pattern.compile(typeCourrier.RegexpCle(), Pattern.MULTILINE | Pattern.DOTALL);
         Matcher matcher = pattern.matcher(chaine);
         if(matcher.matches()) {
-            numeroAtd = matcher.group(1);
+            cle = typeCourrier.prefixeCle() + matcher.group(1);
         }
-        return numeroAtd;
+        return cle;
     }
 
-    private void ajout(Map<String, Map<TypeCourrier, List<PageLue>>> courriers, String numeroAtd, FichierPdf fichier, int ipage) {
+    private void ajout(Map<String, Map<TypeCourrier, List<PageLue>>> courriers, String cle, FichierPdf fichier, int ipage) {
         Map<TypeCourrier,List<PageLue>> entree = new HashMap<TypeCourrier, List<PageLue>>();
         List<PageLue> listePageLues = new ArrayList<PageLue>();
-        if (courriers.get(numeroAtd) != null){
-            entree = courriers.get(numeroAtd);
+        if (courriers.get(cle) != null){
+            entree = courriers.get(cle);
             if (entree.get(fichier.getTypeFichier()) != null) {
                 if(fichier.getTypeFichier().equals(TypeCourrier.SIE_ATD) ||
                         fichier.getTypeFichier().equals(TypeCourrier.SIE_ATD_BULLETIN_REPONSE)) {
-                    log("nouvelle page " + fichier.getTypeFichier() + " pour l'atd N° " + numeroAtd +
+                    log("nouvelle page " + fichier.getTypeFichier() + " pour l'atd N° " + cle +
                         " ; elle ne sera pas imprimée");
                     return;
                 }
@@ -47,7 +47,7 @@ class Courriers {
         }
         listePageLues.add(new PageLue(fichier, ipage));
         entree.put(fichier.getTypeFichier(), listePageLues);
-        courriers.put(numeroAtd, entree);
+        courriers.put(cle, entree);
     }
 
     void verif() {
@@ -173,19 +173,27 @@ class Courriers {
             Clicesiplus clic = new Clicesiplus(nomFichier);
             for (PageAModifier page : pages) {
                 int i = page.getIpage();
+                String[] texte1 = null;
+                String [] texte2 = null;
                 jLabel.setText(String.format("Fichier %s, pages converties : %d/%d",
                         nomFichier.substring(nomFichier.lastIndexOf('\\') + 1), i,clic.getNbTotalPages()));
-                    //récupérer l'adresse du SIE
-                    String[] texte1 = clic.getAdresse("Exp", page);
-                    texte1[1] += " - recouvrement";
-                    //récupérer l'adresse du destinataire
-                    String[] texte2 = clic.getAdresse("Dest", page);
-                    //effacer l'adresse destinataire
-                    clic.deleteAdresse("Dest",page);
-                    //replacer l'adresse SIE
-                    clic.replaceAdresse("Exp", texte1, i);
+                    //récupérer l'adresse du SIE si nécessaire
+                    if(page.getTypeCourrier().rectExp() != null) {
+                        texte1 = clic.getAdresse("Exp", page);
+                        texte1[1] += " - recouvrement";
+                    }
+                    //récupérer l'adresse du destinataire si nécessaire
+                    if(page.getTypeCourrier().rectDest() != null) {
+                        texte2 = clic.getAdresse("Dest", page);
+                    }
+                    //effacer l'adresse expéditeur si nécessaire
+                    if(page.getTypeCourrier().deleteExp()) clic.deleteAdresse("Exp",page);
+                    //effacer l'adresse destinataire si nécessaire
+                    if(page.getTypeCourrier().deleteDest()) clic.deleteAdresse("Dest",page);
+                    //replacer l'adresse SIE si nécessaire
+                    if(page.getTypeCourrier().rectExp() != null) clic.replaceAdresse("Exp", texte1, i);
                     //replacer l'adresse destinataire
-                    clic.replaceAdresse("Dest",texte2, i);
+                    if(page.getTypeCourrier().rectDest() != null) clic.replaceAdresse("Dest",texte2, i);
                     //mettre les trois dièses
                     clic.diese(i);
             }
@@ -207,35 +215,36 @@ class Courriers {
                 if (typeCourrier == TypeCourrier.SIE_ATD) {
                     for (int ipage = 1; ipage <= lecteurPdf.getNumberOfPages(); ipage++) {
                         String chaine = fichier.getChaine(ipage);
-                        String numeroAtd = getNumero(chaine);
+                        String cle = getCle(chaine, typeCourrier);
                         if (chaine.contains("N° 3735 Ampliation")) {
-                            ajout(copies, numeroAtd, fichier, ipage);
+                            ajout(copies, cle, fichier, ipage);
                         } else if (chaine.contains("N° 3735 Original")) {
-                            ajout(originaux, numeroAtd, fichier, ipage);
+                            ajout(originaux, cle, fichier, ipage);
                         }
                     }
                 } else if (typeCourrier == TypeCourrier.SIE_ATD_NOTIFICATION) {
-                    String numeroNotif = "";
+                    String cle = "";
                     for (int ipage = 1; ipage <= lecteurPdf.getNumberOfPages(); ipage++) {
                         String chaine = fichier.getChaine(ipage);
-                        String numeroN = getNumero(chaine);
-                        if (!numeroN.isEmpty()) {
-                            numeroNotif = "N" + numeroN;
+                        String cleN = getCle(chaine, typeCourrier);
+                        if (!cleN.isEmpty()) {
+                            cle = cleN;
                         }
                         if (chaine.contains("N° 3738 Original")) {
-                            ajout(originaux, numeroNotif, fichier, ipage);
+                            ajout(originaux, cle, fichier, ipage);
                         } else if (chaine.contains("N° 3738 Ampliation")) {
-                            ajout(copies, numeroNotif, fichier, ipage);
+                            ajout(copies, cle, fichier, ipage);
                         }
                     }
                 } else if (typeCourrier == TypeCourrier.SIE_ATD_BULLETIN_REPONSE) {
                     for (int ipage = 1; ipage <= lecteurPdf.getNumberOfPages(); ipage++) {
                         String chaine = fichier.getChaine(ipage);
-                        String numeroAtd = "";
+                        //String numeroAtd = "";
+                        String cle = "";
                         if (chaine.contains("BULLETIN-REPONSE A L'AVIS A TIERS DETENTEUR")) {
-                            numeroAtd = getNumero(chaine);
+                            cle = getCle(chaine, typeCourrier);
                         }
-                        ajout(copies, numeroAtd, fichier, ipage);
+                        ajout(copies, cle, fichier, ipage);
                     }
                 }
             }

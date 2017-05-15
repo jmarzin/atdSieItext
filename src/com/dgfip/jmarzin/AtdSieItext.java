@@ -1,6 +1,5 @@
 package com.dgfip.jmarzin;
 
-
 import com.itextpdf.text.DocumentException;
 import javax.swing.*;
 import java.awt.*;
@@ -13,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AtdSieItext {
 
     //limite de pages
-    private static final int MAX_PAGES = 1000;
+    private static final int MAX_PAGES = 400;
     static JLabel jLabel = new JLabel("Demande du répertoire"); // champ d'affichage des étapes
     private static JTextArea display = new JTextArea(16, 60);  // champ d'affichage de la log
 
@@ -60,7 +59,7 @@ public class AtdSieItext {
         RepertoireATraiter repATraiter = new RepertoireATraiter(fc,"atdSie__");
 
         //Vérification de la présence de verso.pdf
-        if(repATraiter.isAtdSie() && repATraiter.getVerso() == null) {
+        if(repATraiter.isVersoAtdSieNecessaire() && repATraiter.getVersoAtdSie() == null) {
             JOptionPane.showMessageDialog(null,
                     "Le fichier verso.pdf est absent.",
                     "Erreur",
@@ -99,7 +98,7 @@ public class AtdSieItext {
         //Ecriture du fichier des copies
         Map<String,List<PageAModifier>> listeFichiers = new HashMap<String, List<PageAModifier>>();
         try {
-            listeFichiers = courriers.ecritCopies(listeFichiers, MAX_PAGES,repATraiter.getRepertoire(),repATraiter.getVerso() ,dateHeure);
+            listeFichiers = courriers.ecritCopies(listeFichiers, MAX_PAGES,repATraiter.getRepertoire(),repATraiter.getVersoAtdSie() ,dateHeure);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (DocumentException e) {
@@ -144,7 +143,7 @@ public class AtdSieItext {
         if(clicEsi){
             for (String nomFichier: listeFichiers.keySet()) {
                 try {
-                    courriers.clicEsi(nomFichier, 2,listeFichiers.get(nomFichier));
+                    courriers.clicEsi(nomFichier, 1,listeFichiers.get(nomFichier));
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (DocumentException e) {

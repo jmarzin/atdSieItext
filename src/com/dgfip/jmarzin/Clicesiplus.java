@@ -41,7 +41,7 @@ class Clicesiplus {
     }
 
     String[] getAdresse(String adresse, PageAModifier page) throws IOException {
-        Rectangle rect = (adresse == "Exp") ? page.getTypeCourrier().rectExp() : page.getTypeCourrier().rectDest();
+        Rectangle rect = (adresse.equals("Exp")) ? page.getTypeCourrier().rectExp() : page.getTypeCourrier().rectDest();
         RegionTextRenderFilter filter = new RegionTextRenderFilter(rect);
         FilteredTextRenderListener strategy = new FilteredTextRenderListener(new LocationTextExtractionStrategy(), filter);
         return PdfTextExtractor.getTextFromPage(lecteurPdf, page.getIpage(), strategy).split("\n");
@@ -66,6 +66,7 @@ class Clicesiplus {
             espace = 10f;
         } else {
             fonte = ocr10;
+            texte = enleveAccent(texte);
             y = 650f;
             espace = 12f;
         }

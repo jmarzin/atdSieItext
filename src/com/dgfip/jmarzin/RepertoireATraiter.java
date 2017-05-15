@@ -10,8 +10,8 @@ import static com.dgfip.jmarzin.AtdSieItext.jLabel;
 
 class RepertoireATraiter {
 
-    private boolean atdSie = false;
-    boolean isAtdSie() { return atdSie;}
+    private boolean versoAtdSieNecessaire = false;
+    boolean isVersoAtdSieNecessaire() { return versoAtdSieNecessaire;}
 
     private File repertoire;
     File getRepertoire() { return repertoire;}
@@ -22,8 +22,8 @@ class RepertoireATraiter {
     private List<String> fichiersADeplacer = new ArrayList<String>();
     List<String> getFichiersADeplacer() { return fichiersADeplacer;}
 
-    private PdfReader verso = null;
-    PdfReader getVerso() { return verso;}
+    private PdfReader versoAtdSie = null;
+    PdfReader getVersoAtdSie() { return versoAtdSie;}
 
     RepertoireATraiter(JFileChooser fc, String exclus) {
         this.repertoire = fc.getSelectedFile().getAbsoluteFile();
@@ -35,10 +35,10 @@ class RepertoireATraiter {
             if(!listeFichiers[i].getName().startsWith(exclus)) {
                 FichierPdf fic = new FichierPdf(listeFichiers[i]);
                 this.fichiersPdf.add(fic);
-                if(fic.isAtdSie()) atdSie = true;
+                if(fic.isAtdSie()) versoAtdSieNecessaire = true;
                 TypeCourrier typeFichier = fic.getTypeFichier();
                 if (typeFichier == TypeCourrier.SIE_ATD_VERSO) { //;"Verso") {
-                    this.verso = fic.getLecteurPdf();
+                    this.versoAtdSie = fic.getLecteurPdf();
                 } else {
                     this.fichiersADeplacer.add(listeFichiers[i].getName());
                 }

@@ -35,24 +35,16 @@ class FichierPdf {
             e.printStackTrace();
         }
         String chaine = this.getChaine(1);
-        if (chaine.contains("BULLETIN-REPONSE A L'AVIS A TIERS DETENTEUR")) {
-            this.typeFichier = TypeCourrier.SIE_ATD_BULLETIN_REPONSE; //"Bulletin_reponse_atd";
-            this.atdSie = true;
+        for(TypeCourrier typeCourrier : TypeCourrier.values()) {
+            if(chaine.contains(typeCourrier.chaineType())) {
+                this.typeFichier = typeCourrier;
+                break;
+            }
         }
-        else if (chaine.contains("N° 3735 Original")) {
-            this.typeFichier = TypeCourrier.SIE_ATD;//"Atd";
+        if(typeFichier == TypeCourrier.SIE_ATD ||
+                typeFichier == TypeCourrier.SIE_ATD_BULLETIN_REPONSE ||
+                typeFichier == TypeCourrier.SIE_ATD_NOTIFICATION) {
             this.atdSie = true;
-        }
-        else if (chaine.contains("N° 3738 Original")){
-            this.typeFichier = TypeCourrier.SIE_ATD_NOTIFICATION;//"Notification_atd";
-            this.atdSie = true;
-        }
-        else if (chaine.contains("ATD-MIRIAM-SP")) {
-            this.typeFichier = TypeCourrier.SIE_ATD_VERSO;//"Verso";
-            this.atdSie = true;
-        } else {
-            this.typeFichier = null;
-            this.atdSie = false;
         }
     }
 }
